@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JeetuTube - वीडियो शेयरिंग साइट</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    header {
+      background-color: #cc0000;
+      color: white;
+      padding: 20px 0;
+    }
+    h1 {
+      margin: 0;
+    }
+    main {
+      padding: 20px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px;
+      font-size: 16px;
+    }
+    .video-container {
+      margin-top: 30px;
+    }
+    video {
+      width: 80%;
+      max-width: 600px;
+    }
+    .video-box {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px auto;
+      width: 90%;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js"></script>
+</head>
+<body>
+  <header>
+    <h1>JeetuTube - वीडियो देखें और अपलोड करें</h1>
+    <p>Watch and Upload Videos | हिंदी और English</p>
+  </header>
+  <main>
+    <h2>अपना वीडियो अपलोड करें / Upload Your Video</h2>
+    <input type="file" id="videoFile">
+    <input type="text" id="title" placeholder="वीडियो का शीर्षक / Video Title">
+    <br>
+    <button onclick="uploadVideo()">Upload करें / Upload</button>
+
+    <div class="video-container" id="videoList">
+      <h2>🎥 अपलोड किए गए वीडियो / Uploaded Videos</h2>
+    </div>
+  </main>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "SENDER_ID",
+      appId: "APP_ID",
+      databaseURL: "https://YOUR_PROJECT.firebaseio.com"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const storage = firebase.storage();
+    const database = firebase.database();
+
+    function uploadVideo() {
+      const file = document.getElementById('videoFile').files[0];
+      const title = document.getElementById('title').value;
+      if (!file || !title) {
+        alert("कृपया वीडियो और शीर्षक भरें | Please choose a file and title");
+        return;
+      }
+
+      const storageRef = storage.ref('videos/' + file.name);
+      storageRef.put(file).then(snapshot => {
+        snapshot.ref.getDownloadURL().then(url => {
+          database.ref('videos/').push({ title: title, url: url });
+          alert("वीडियो सफलतापूर्वक अपलोड हो गया | Video uploaded!");
+        });
+      });
+    }
+
+    database.ref('videos/').on('child_added', snapshot => {
+      const data = snapshot.val();
+      const box = document.createElement('div');
+      box.className = 'video-box';
+      box.innerHTML = `<h3>${data.title}</h3><video controls src="${data.url}"></video>`;
+      document.getElementById('videoList').appendChild(box);
+    });
+  </script>
+</body>
+</html>
